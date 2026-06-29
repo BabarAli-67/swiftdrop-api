@@ -28,11 +28,11 @@ export const login = async (req, res) => {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
         if (!user) {
-            return req.status(401).json({ message: "Invalid Credentials" });
+            return res.status(401).json({ message: "Invalid Credentials" });
         }
         const ismatch = await user.isPasswordCorrect(password);
         if (!ismatch) {
-            req.status(401).json({ message: "Invalid Credentials" })
+           return res.status(401).json({ message: "Invalid Credentials" });
         }
         const token = jwt.sign(
             {
