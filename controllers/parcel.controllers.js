@@ -38,9 +38,13 @@ export const parcelUpdate = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+    const updateData = { status };
+    if (req.user.role === "Rider") {
+      updateData.rider = req.user._id;
+  }
     const updatedParcel = await Parcel.findByIdAndUpdate(
       id,
-      { status },
+      updateData,
       { new: true },
     );
     if (!updatedParcel) {
