@@ -1,6 +1,6 @@
 import Parcel from "../models/parcel.models.js";
 
-export const createParcel = async (req, res) => {
+export const createParcel = async (req, res, next) => {
   try {
     const { description, price } = req.body;
     const newParcel = new Parcel({
@@ -15,11 +15,11 @@ export const createParcel = async (req, res) => {
       parcel: savedParcel,
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-export const getAvailableParcels = async (req, res) => {
+export const getAvailableParcels = async (req, res, next) => {
   try {
     const getAllParcels = await Parcel.find({ status: "Pending" }).sort({
       createdAt: -1,
@@ -30,13 +30,11 @@ export const getAvailableParcels = async (req, res) => {
       getAllParcels,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: error.message,
-    });
+    next(error);
   }
 };
 
-export const parcelUpdate = async (req, res) => {
+export const parcelUpdate = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -57,23 +55,36 @@ export const parcelUpdate = async (req, res) => {
       parcel: updatedParcel,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: error.message,
-    });
+    next(error);
   }
 };
 
-export const deleteParcel = async (req, res) => {
+export const deleteParcel = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const deletedParcel = await Parcel.findByIdAndDelete(id);
-    if (!deletedParcel) {
-      return res.status(404).json({
-        message: "Parcel not found",
-      });
+    const parcel = await Parcel.findById(id);
+    if (!parcel) {
+      return res.status(404).json({ message: "Parcel not found" });
     }
-    return res.status(200).json({ message: "Parcel deleted successfully" });
+    if (parcel.merchant.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Unauthorized: You can only delete your own parcels" });
+    }
+    await Parcel.findByIdAndDelete(id);
+
+    return res.status(200).json({ success: true, message: "Parcel deleted successfully" });
+    
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    next(error);
+  }
+};
+
+export const getMerchantParcels = async (req, res, next) => {
+  try {
+    const parcels = await Parcel.find({ merchant: req.user._id }).sort({
+      createdAt: -1,
+    });
+    return res.status(200).json({ success: true, parcels });
+  } catch (error) {
+    next(error);
   }
 };

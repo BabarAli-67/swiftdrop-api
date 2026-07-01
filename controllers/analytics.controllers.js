@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Parcel from "../models/parcel.models.js";
 
-export const getRiderEarnings = async (req, res) => {
+export const getRiderEarnings = async (req, res, next) => {
   try {
     const riderId = req.user._id;
     const earningsPipeline = await Parcel.aggregate([
@@ -31,6 +31,6 @@ export const getRiderEarnings = async (req, res) => {
       analytics: earningsPipeline[0],
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    next(error);
   }
 };

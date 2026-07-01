@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.models.js";
 
-export const register = async (req, res) => {
+export const register = async (req, res, next) => {
     try {
         const { email, password, role } = req.body;
         if (!email || !password) {
@@ -19,11 +19,11 @@ export const register = async (req, res) => {
             }
         }
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        next(error);
     }
 }
 
-export const login = async (req, res) => {
+export const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
@@ -34,12 +34,13 @@ export const login = async (req, res) => {
         if (!ismatch) {
            return res.status(401).json({ message: "Invalid Credentials" });
         }
+        const KEY = process.env.JWT_SECRET;
         const token = jwt.sign(
             {
                 _id: user._id,
                 role: user.role,
             },
-            "KEY",
+            KEY,
             {
                 expiresIn: '1d'
             }
@@ -47,6 +48,6 @@ export const login = async (req, res) => {
         return res.status(200).json({ message: "Login Successfully", token });
     }
     catch (error) {
-        return res.status(500).json({ message: error.message });
+       next(error);
     }
 }
