@@ -21,7 +21,9 @@ export const createParcel = async (req, res) => {
 
 export const getAvailableParcels = async (req, res) => {
   try {
-    const getAllParcels = await Parcel.find();
+    const getAllParcels = await Parcel.find({ status: "Pending" }).sort({
+      createdAt: -1,
+    });
 
     return res.status(200).json({
       message: "Available parcels fetched successfully",
@@ -41,12 +43,10 @@ export const parcelUpdate = async (req, res) => {
     const updateData = { status };
     if (req.user.role === "Rider") {
       updateData.rider = req.user._id;
-  }
-    const updatedParcel = await Parcel.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true },
-    );
+    }
+    const updatedParcel = await Parcel.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
     if (!updatedParcel) {
       return res.status(404).json({
         message: "No parcel matches the provided ID",
